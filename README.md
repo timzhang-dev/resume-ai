@@ -22,6 +22,7 @@ A production-ready Next.js 14 application that uses AI to transform your resume 
 - **Supabase** - PostgreSQL database with real-time capabilities
 - **Generic LLM Interface** - Supports OpenAI, Groq, and Hugging Face APIs
 
+<a id="local-setup"></a>
 ## 🚀 Local Setup
 
 Follow these steps to run the application locally:
@@ -117,6 +118,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 └── package.json
 ```
 
+<a id="how-it-works"></a>
 ## 🔄 How It Works
 
 The application follows a simple but powerful workflow:
