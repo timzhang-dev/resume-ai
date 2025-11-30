@@ -16,17 +16,63 @@ export interface LLMResponse {
 }
 
 /**
+ * Cleans up the LLM response by removing prefixes, quotation marks, and extra formatting
+ */
+function cleanResponse(text: string): string {
+  let cleaned = text.trim();
+
+  // Remove common prefixes (case-insensitive)
+  const prefixes = [
+    /^Improved Resume Bullet:\s*/i,
+    /^Improved Bullet:\s*/i,
+    /^Improved:\s*/i,
+    /^Resume Bullet:\s*/i,
+    /^Bullet:\s*/i,
+    /^Output:\s*/i,
+    /^Result:\s*/i,
+  ];
+
+  for (const prefix of prefixes) {
+    cleaned = cleaned.replace(prefix, '');
+  }
+
+  // Remove quotation marks at the start and end
+  cleaned = cleaned.replace(/^["']+|["']+$/g, '');
+
+  // Remove any leading/trailing colons, dashes, or other punctuation
+  cleaned = cleaned.replace(/^[:-\s]+|[:-\s]+$/g, '');
+
+  return cleaned.trim();
+}
+
+/**
  * Calls the configured LLM to improve a resume bullet point
  */
 export async function improveResumeBullet(
   inputText: string,
   config: LLMConfig
 ): Promise<LLMResponse> {
-  const prompt = `You are a professional resume writer. Improve the following resume bullet point to be more impactful, specific, and professional. Keep it concise (one line). Return only the improved bullet point, no explanations.
+  const prompt = `You are a senior FAANG resume coach and professional technical resume writer.
 
-Original: ${inputText}
+Rewrite the following resume bullet using the Google X–Y–Z formula:
 
-Improved:`;
+"Accomplished X by doing Y resulting in Z."
+
+Requirements:
+
+- Be extremely specific and impact-focused
+
+- Add realistic, quantifiable metrics (%, $, time, scale, or volume) when possible
+
+- Use strong action verbs and technical language
+
+- Keep it to ONE concise professional resume bullet (one line only)
+
+- Do NOT include explanations, prefixes, or quotation marks
+
+- Return ONLY the improved bullet
+
+Resume Bullet: ${inputText}`;
 
   try {
     switch (config.provider) {
@@ -80,13 +126,13 @@ async function callOpenAI(
   }
 
   const data = await response.json();
-  const text = data.choices[0]?.message?.content?.trim() || '';
+  const rawText = data.choices[0]?.message?.content?.trim() || '';
 
-  if (!text) {
+  if (!rawText) {
     throw new Error('No response from OpenAI');
   }
 
-  return { text };
+  return { text: cleanResponse(rawText) };
 }
 
 /**
@@ -119,13 +165,13 @@ async function callGroq(prompt: string, config: LLMConfig): Promise<LLMResponse>
   }
 
   const data = await response.json();
-  const text = data.choices[0]?.message?.content?.trim() || '';
+  const rawText = data.choices[0]?.message?.content?.trim() || '';
 
-  if (!text) {
+  if (!rawText) {
     throw new Error('No response from Groq');
   }
 
-  return { text };
+  return { text: cleanResponse(rawText) };
 }
 
 /**
@@ -161,15 +207,15 @@ async function callHuggingFace(
   }
 
   const data = await response.json();
-  const text = Array.isArray(data) && data[0]?.generated_text
+  const rawText = Array.isArray(data) && data[0]?.generated_text
     ? data[0].generated_text.replace(prompt, '').trim()
     : '';
 
-  if (!text) {
+  if (!rawText) {
     throw new Error('No response from Hugging Face');
   }
 
-  return { text };
+  return { text: cleanResponse(rawText) };
 }
 
 
